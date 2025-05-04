@@ -471,6 +471,8 @@ enum sbi_sse_state {
 #define SBI_EXT_FIRMWARE_START			0x0A000000
 #define SBI_EXT_FIRMWARE_END			0x0AFFFFFF
 
+#define SBI_EXT_CSR_DUMP                0x43535244
+
 /* SBI return error codes */
 #define SBI_SUCCESS				0
 #define SBI_ERR_FAILED				-1

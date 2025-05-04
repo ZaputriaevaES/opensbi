@@ -164,12 +164,72 @@ int sbi_ecall_handler(struct sbi_trap_context *tcntx)
 	return 0;
 }
 
+
+// Sbi-call handler
+static int sbi_ecall_csr_handler(unsigned long extid, unsigned long funcid,
+    struct sbi_trap_regs *regs,
+    struct sbi_ecall_return *out) 
+{
+    //sbi_printf("[sbi_ecall] start sbi_ecall_csr_handler\n");
+	//sbi_printf("[sbi_ecall] funcid = %ld \n", funcid);
+	//sbi_printf("[sbi_ecall] csr_num = %ld \n", regs->a0);
+    unsigned long csr_num = regs->a0;
+    unsigned long csr_val;
+
+    switch (funcid) 
+    {
+        case 0:
+            switch (csr_num) 
+            {
+                case CSR_MSTATUS: // CSR_MSTATUS
+					csr_val = csr_read(CSR_MSTATUS);
+                    break;
+                case CSR_MEPC: // CSR_MEPC
+					csr_val = csr_read(CSR_MEPC);
+                    break;
+                case CSR_MTVAL: // CSR_MTVAL
+                    csr_val = csr_read(CSR_MTVAL);
+                    break;
+                case CSR_MHARTID: // CSR_MHARTID
+					csr_val = csr_read(CSR_MHARTID);
+                    break;
+                default:
+                    return SBI_ERR_NOT_SUPPORTED;
+            }
+            out->value = csr_val;
+            //sbi_printf("[sbi_ecall] end sbi_ecall_csr_handler\n");
+            return SBI_OK;
+        default:
+            return SBI_ERR_NOT_SUPPORTED;
+    }
+}
+ 
+struct sbi_ecall_extension ecall_csr;
+
+// Register the extension
+static int sbi_ecall_csr_register_extensions(void) 
+{
+    return sbi_ecall_register_extension(&ecall_csr);
+}
+ 
+// Extension structure
+struct sbi_ecall_extension ecall_csr = 
+{
+    .name                   = "csrdump",
+    .extid_start            = SBI_EXT_CSR_DUMP,
+    .extid_end              = SBI_EXT_CSR_DUMP,
+    .register_extensions    = sbi_ecall_csr_register_extensions,
+    .handle                 = sbi_ecall_csr_handler,
+};
+
 int sbi_ecall_init(void)
 {
 	int ret;
 	struct sbi_ecall_extension *ext;
 	unsigned long i;
 
+	sbi_ecall_register_extension(&ecall_csr);
+	
 	for (i = 0; sbi_ecall_exts[i]; i++) {
 		ext = sbi_ecall_exts[i];
 		ret = SBI_ENODEV;
